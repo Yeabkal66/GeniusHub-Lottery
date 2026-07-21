@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { ArrowLeft, User, Phone, Mail, Sparkles, Shield } from 'lucide-react';
+import { ArrowLeft, User, Phone, Sparkles, Shield, ChevronRight } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -33,7 +33,7 @@ const BuyTicket = () => {
       setLottery(response.data);
       setLoadingLottery(false);
     } catch (error) {
-      console.error('Error fetching lottery:', error);
+      console.error('Error:', error);
       toast.error('Failed to load lottery status');
       navigate('/');
     }
@@ -47,7 +47,7 @@ const BuyTicket = () => {
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = 'Phone number is required';
     } else if (!/^09[0-9]{8}$/.test(formData.phoneNumber.trim())) {
-      newErrors.phoneNumber = 'Phone number must start with 09 and be 10 digits total';
+      newErrors.phoneNumber = 'Must start with 09 and be 10 digits';
     }
     
     setErrors(newErrors);
@@ -86,127 +86,109 @@ const BuyTicket = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="spinner-premium relative mx-auto"></div>
-          <p className="mt-6 text-white/60 font-light">Loading...</p>
+          <div className="spinner-clean mx-auto"></div>
+          <p className="mt-4 text-purple-600 font-medium">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative">
-      <div className="bg-particles">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="particle"
-            style={{
-              width: Math.random() * 4 + 2 + 'px',
-              height: Math.random() * 4 + 2 + 'px',
-              left: Math.random() * 100 + '%',
-              animationDuration: Math.random() * 20 + 15 + 's',
-              animationDelay: Math.random() * 10 + 's',
-              background: `rgba(139, 92, 246, ${Math.random() * 0.2 + 0.05})`
-            }}
-          />
-        ))}
-      </div>
+    <div className="container-mobile">
+      <button
+        onClick={() => navigate('/')}
+        className="flex items-center gap-2 text-purple-500 hover:text-purple-700 transition-colors mb-4 font-medium"
+      >
+        <ArrowLeft className="w-5 h-5" />
+        <span>Back</span>
+      </button>
 
-      <div className="glass-card w-full max-w-md p-8 relative z-10 hover-lift">
-        <button
-          onClick={() => navigate('/')}
-          className="text-white/40 hover:text-white/70 transition-colors mb-6 flex items-center gap-2 text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </button>
-
-        <div className="text-center mb-8">
-          <div className="inline-block p-4 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl float-animation border border-white/10">
-            <Ticket className="w-10 h-10 text-indigo-400" />
+      <div className="card-clean">
+        <div className="text-center mb-6">
+          <div className="icon-wrapper-purple mx-auto">
+            <Ticket className="w-8 h-8" />
           </div>
-          <h2 className="section-title gradient-text text-3xl mt-4">Buy Ticket</h2>
-          <p className="text-white/40 text-sm mt-2">Enter your details to purchase a ticket</p>
+          <h2 className="text-2xl font-bold text-gray-900 mt-3">
+            <span className="gradient-text">Buy Ticket</span>
+          </h2>
+          <p className="text-purple-500 text-sm mt-1 font-medium">Enter your details to purchase</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="label-premium">First Name</label>
+            <label className="label-clean">First Name</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
               <input
                 type="text"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                className={`input-premium pl-12 ${errors.firstName ? 'error' : ''}`}
+                className={`input-clean pl-11 ${errors.firstName ? 'error' : ''}`}
                 placeholder="Enter your first name"
                 disabled={loading}
               />
             </div>
-            {errors.firstName && <p className="error-text">{errors.firstName}</p>}
+            {errors.firstName && <p className="error-text-clean">{errors.firstName}</p>}
           </div>
 
           <div>
-            <label className="label-premium">Last Name</label>
+            <label className="label-clean">Last Name</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
               <input
                 type="text"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                className={`input-premium pl-12 ${errors.lastName ? 'error' : ''}`}
+                className={`input-clean pl-11 ${errors.lastName ? 'error' : ''}`}
                 placeholder="Enter your last name"
                 disabled={loading}
               />
             </div>
-            {errors.lastName && <p className="error-text">{errors.lastName}</p>}
+            {errors.lastName && <p className="error-text-clean">{errors.lastName}</p>}
           </div>
 
           <div>
-            <label className="label-premium">Phone Number</label>
+            <label className="label-clean">Phone Number</label>
             <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
               <input
                 type="tel"
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                className={`input-premium pl-12 ${errors.phoneNumber ? 'error' : ''}`}
+                className={`input-clean pl-11 ${errors.phoneNumber ? 'error' : ''}`}
                 placeholder="09XXXXXXXX"
                 disabled={loading}
               />
             </div>
-            {errors.phoneNumber && <p className="error-text">{errors.phoneNumber}</p>}
-            <p className="text-white/30 text-xs mt-2 flex items-center gap-1">
+            {errors.phoneNumber && <p className="error-text-clean">{errors.phoneNumber}</p>}
+            <div className="help-text">
               <Shield className="w-3 h-3" />
               Must start with 09 and be 10 digits
-            </p>
+            </div>
           </div>
 
           <button
             type="submit"
-            className="btn-premium"
+            className="btn-primary-clean mt-2"
             disabled={loading}
           >
             {loading ? (
-              <span className="flex items-center justify-center gap-2">
+              <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 Processing...
-              </span>
+              </>
             ) : (
-              <span className="flex items-center justify-center gap-2">
+              <>
                 <Sparkles className="w-5 h-5" />
                 Continue
-              </span>
+                <ChevronRight className="w-5 h-5" />
+              </>
             )}
           </button>
         </form>
-
-        <p className="text-center text-white/20 text-xs mt-6">
-          By continuing, you agree to our terms and conditions
-        </p>
       </div>
     </div>
   );
