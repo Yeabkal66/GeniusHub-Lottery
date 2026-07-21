@@ -5,13 +5,7 @@ const Lottery = require('./models/Lottery');
 let bot;
 let pendingActions = {};
 
-// Helper to get next ticket number
-const getNextTicketNumber = () => {
-  const count = Math.floor(Math.random() * 1000);
-  return 'A-' + String(count).padStart(3, '0');
-};
-
-// Helper to update sold count
+// Helper functions
 const updateSoldCount = async () => {
   const lottery = await Lottery.findOne();
   if (lottery) {
@@ -20,7 +14,6 @@ const updateSoldCount = async () => {
   }
 };
 
-// Helper to get next order number
 const getNextOrder = async () => {
   const lottery = await Lottery.findOne();
   if (!lottery) {
@@ -31,34 +24,43 @@ const getNextOrder = async () => {
   return lottery.ticketsSold + 1;
 };
 
-// Check if lottery is shutdown
 const isShutdown = async () => {
   const lottery = await Lottery.findOne();
   return lottery ? lottery.isShutdown : false;
 };
 
-// Check if sold out
 const isSoldOut = async () => {
   const lottery = await Lottery.findOne();
   if (!lottery) return false;
   return lottery.ticketsSold >= lottery.maxTickets;
 };
 
-// Send notification to admin about new application
+// ✅ NOTIFY ADMIN FUNCTION - Called when user clicks "I Have Paid"
 const notifyAdmin = async (application) => {
   try {
+    if (!bot) {
+      console.error('Bot not initialized');
+      return;
+    }
+
     const order = await getNextOrder();
     const lottery = await Lottery.findOne();
     const maxTickets = lottery ? lottery.maxTickets : 10;
     
-    await bot.telegram.sendMessage(
-      process.env.ADMIN_ID,
-      'New Application\n\n' +
+    const message = 
+      '📝 *New Lottery Application*\n\n' +
       'Name: ' + application.firstName + ' ' + application.lastName + '\n' +
       'Phone: ' + application.phoneNumber + '\n' +
       'Order: ' + order + '/' + maxTickets + '\n\n' +
-      'Use /approve or /reject commands.'
+      'Use /approve or /reject commands.';
+    
+    await bot.telegram.sendMessage(
+      process.env.ADMIN_ID,
+      message,
+      { parse_mode: 'Markdown' }
     );
+    
+    console.log('✅ Admin notified about application:', application.firstName, application.lastName);
   } catch (error) {
     console.error('Error notifying admin:', error);
   }
@@ -67,7 +69,7 @@ const notifyAdmin = async (application) => {
 const setupBot = () => {
   bot = new Telegraf(process.env.BOT_TOKEN);
 
-  // Handle /start command
+  // /start command
   bot.command('start', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
       await ctx.reply('Unauthorized');
@@ -79,7 +81,7 @@ const setupBot = () => {
     const sold = lottery ? lottery.ticketsSold : 0;
     
     await ctx.reply(
-      'Lottery Bot Active\n\n' +
+      '🤖 *Lottery Bot Active*\n\n' +
       'Total Tickets: ' + maxTickets + '\n' +
       'Sold: ' + sold + '\n' +
       'Remaining: ' + (maxTickets - sold) + '\n\n' +
@@ -88,11 +90,12 @@ const setupBot = () => {
       '/approve - Approve an application\n' +
       '/reject - Reject an application\n' +
       '/shutdown - Shutdown the lottery\n' +
-      '/start - Show this menu'
+      '/start - Show this menu',
+      { parse_mode: 'Markdown' }
     );
   });
 
-  // Handle /status command
+  // /status command
   bot.command('status', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
       await ctx.reply('Unauthorized');
@@ -108,16 +111,17 @@ const setupBot = () => {
     const pending = await Application.countDocuments({ status: 'pending' });
     
     await ctx.reply(
-      'Lottery Status\n\n' +
+      '📊 *Lottery Status*\n\n' +
       'Total Tickets: ' + lottery.maxTickets + '\n' +
       'Sold: ' + lottery.ticketsSold + '\n' +
       'Remaining: ' + (lottery.maxTickets - lottery.ticketsSold) + '\n' +
       'Pending Applications: ' + pending + '\n' +
-      'Status: ' + (lottery.isShutdown ? 'SHUTDOWN' : 'Active')
+      'Status: ' + (lottery.isShutdown ? 'SHUTDOWN' : 'Active'),
+      { parse_mode: 'Markdown' }
     );
   });
 
-  // Handle /approve command
+  // /approve command
   bot.command('approve', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
       await ctx.reply('Unauthorized');
@@ -148,14 +152,15 @@ const setupBot = () => {
     };
 
     await ctx.reply(
-      'Approve application?\n\n' +
+      '✅ *Approve application?*\n\n' +
       'Name: ' + application.firstName + ' ' + application.lastName + '\n' +
       'Phone: ' + application.phoneNumber + '\n\n' +
-      'Reply with ticket number (e.g., A-001) or /cancel'
+      'Reply with ticket number (e.g., A-001) or /cancel',
+      { parse_mode: 'Markdown' }
     );
   });
 
-  // Handle /reject command
+  // /reject command
   bot.command('reject', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
       await ctx.reply('Unauthorized');
@@ -173,22 +178,15 @@ const setupBot = () => {
     application.status = 'rejected';
     await application.save();
 
-    const lottery = await Lottery.findOne();
-    const maxTickets = lottery ? lottery.maxTickets : 10;
-    const order = await Application.countDocuments({ 
-      status: { $in: ['approved', 'pending'] } 
-    });
-
     await ctx.reply(
-      'Application Rejected\n\n' +
+      '❌ *Application Rejected*\n\n' +
       'Name: ' + application.firstName + ' ' + application.lastName + '\n' +
-      'Phone: ' + application.phoneNumber + '\n' +
-      'Order: ' + order + '/' + maxTickets + '\n\n' +
-      'The user has been notified.'
+      'Phone: ' + application.phoneNumber,
+      { parse_mode: 'Markdown' }
     );
   });
 
-  // Handle /shutdown command
+  // /shutdown command
   bot.command('shutdown', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
       await ctx.reply('Unauthorized');
@@ -199,13 +197,13 @@ const setupBot = () => {
     if (lottery) {
       lottery.isShutdown = true;
       await lottery.save();
-      await ctx.reply('Lottery has been shutdown. No more applications will be accepted.');
+      await ctx.reply('🔴 Lottery has been shutdown. No more applications will be accepted.');
     } else {
       await ctx.reply('No lottery found');
     }
   });
 
-  // Handle /cancel command
+  // /cancel command
   bot.command('cancel', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
       await ctx.reply('Unauthorized');
@@ -265,12 +263,13 @@ const setupBot = () => {
       const maxTickets = lottery ? lottery.maxTickets : 10;
 
       await ctx.reply(
-        'Application Approved\n\n' +
+        '✅ *Application Approved*\n\n' +
         'Name: ' + application.firstName + ' ' + application.lastName + '\n' +
         'Phone: ' + application.phoneNumber + '\n' +
         'Ticket: ' + ticketNumber + '\n' +
         'Order: ' + order + '/' + maxTickets + '\n\n' +
-        'Send SMS manually to: ' + application.phoneNumber
+        '📱 Send SMS manually to: ' + application.phoneNumber,
+        { parse_mode: 'Markdown' }
       );
 
       delete pendingActions[ctx.from.id];
@@ -279,10 +278,11 @@ const setupBot = () => {
 
   // Start bot
   bot.launch()
-    .then(() => console.log('Telegram bot started'))
-    .catch(err => console.error('Bot error:', err));
+    .then(() => console.log('✅ Telegram bot started'))
+    .catch(err => console.error('❌ Bot error:', err));
 
   return bot;
 };
 
+// ✅ EXPORT both functions
 module.exports = { setupBot, notifyAdmin };
