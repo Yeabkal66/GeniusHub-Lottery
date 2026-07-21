@@ -20,9 +20,9 @@ const BuyTicket = () => {
     if (!formData.firstName.trim()) newErrors.firstName = 'Required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Required';
     if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Required';
-    } else if (!/^[0-9+\-\s()]{10,15}$/.test(formData.phoneNumber.trim())) {
-      newErrors.phoneNumber = 'Invalid phone number';
+  newErrors.phoneNumber = 'Required';
+} else if (!/^09[0-9]{8}$/.test(formData.phoneNumber.trim())) {
+  newErrors.phoneNumber = 'Phone number must start with 09 and be 10 digits total';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -108,7 +108,7 @@ const BuyTicket = () => {
               value={formData.phoneNumber}
               onChange={handleChange}
               className={`input-field ${errors.phoneNumber ? 'border-red-500' : ''}`}
-              placeholder="Enter phone number"
+              placeholder="09XXXXXXXX"
               disabled={loading}
             />
             {errors.phoneNumber && (
