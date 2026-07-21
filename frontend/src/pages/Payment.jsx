@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import toast from 'react-hot-toast';
-import { ArrowLeft, CreditCard, Phone, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
+import { ArrowLeft, CreditCard, Phone, AlertCircle, DollarSign, Send } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Payment = () => {
   const [loading, setLoading] = useState(false);
@@ -9,96 +12,220 @@ const Payment = () => {
   const location = useLocation();
   const { applicationId } = location.state || {};
 
-  const handlePaid = () => {
+  const handlePaid = async () => {
     if (!applicationId) {
       toast.error('Invalid session');
       navigate('/');
       return;
     }
+
     setLoading(true);
-    navigate('/pending', { state: { applicationId } });
+
+    try {
+      // ✅ Send confirmation to backend
+      const response = await axios.post(`${API_URL}/api/lottery/payment-confirm`, {
+        applicationId
+      });
+
+      console.log('Payment confirmed:', response.data);
+
+      // Navigate to pending page
+      navigate('/pending', { 
+        state: { 
+          applicationId,
+          fromPayment: true 
+        } 
+      });
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      toast.error(error.response?.data?.message || 'Failed to confirm payment. Please try again.');
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="container-mobile">
+    <div style={{ 
+      maxWidth: '420px', 
+      margin: '0 auto', 
+      padding: '16px',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center'
+    }}>
       <button
         onClick={() => navigate('/buy')}
-        className="flex items-center gap-2 text-purple-500 hover:text-purple-700 transition-colors mb-4 font-medium"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          color: '#8b5cf6',
+          fontWeight: '500',
+          marginBottom: '16px',
+          cursor: 'pointer',
+          background: 'none',
+          border: 'none',
+          fontSize: '1rem'
+        }}
       >
         <ArrowLeft className="w-5 h-5" />
         <span>Back</span>
       </button>
 
-      <div className="card-clean">
-        <div className="text-center mb-6">
-          <div className="icon-wrapper-purple mx-auto">
+      <div style={{
+        background: '#ffffff',
+        borderRadius: '24px',
+        padding: '28px 24px',
+        boxShadow: '0 10px 40px rgba(139, 92, 246, 0.08)',
+        border: '1px solid rgba(139, 92, 246, 0.06)',
+        position: 'relative'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: 'linear-gradient(90deg, #f59e0b, #d97706, #b45309)',
+          borderRadius: '24px 24px 0 0'
+        }}></div>
+
+        <div style={{ textAlign: 'center', marginBottom: '24px', paddingTop: '8px' }}>
+          <div style={{
+            display: 'inline-flex',
+            padding: '14px',
+            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            borderRadius: '20px',
+            color: 'white',
+            boxShadow: '0 8px 24px rgba(245, 158, 11, 0.3)'
+          }}>
             <CreditCard className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mt-3">
-            <span className="gradient-text">Payment</span>
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: 'bold',
+            color: '#1e293b',
+            marginTop: '12px'
+          }}>
+            <span style={{
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>Payment</span>
           </h2>
-          <p className="text-purple-500 text-sm mt-1 font-medium">Complete your payment</p>
+          <p style={{ color: '#d97706', fontSize: '0.875rem', marginTop: '4px', fontWeight: '500' }}>Complete your payment</p>
         </div>
 
-        <div className="space-y-4">
-          {/* Price with Purple */}
-          <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-100">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600 font-medium flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-purple-600" />
+        <div style={{ marginBottom: '16px' }}>
+          {/* Price */}
+          <div style={{
+            background: '#faf5ff',
+            borderRadius: '16px',
+            padding: '16px',
+            border: '2px solid #ede9fe',
+            marginBottom: '16px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ color: '#6d28d9', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <DollarSign className="w-5 h-5" />
                 Ticket Price
               </span>
-              <span className="text-2xl font-bold text-purple-700">$100</span>
+              <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#7c3aed' }}>$100</span>
             </div>
           </div>
 
           {/* Payment Instructions */}
-          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-5">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div style={{
+            background: '#fffbeb',
+            border: '2px solid #fde68a',
+            borderRadius: '16px',
+            padding: '20px'
+          }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0" style={{ marginTop: '2px' }} />
               <div>
-                <p className="text-yellow-700 font-semibold text-sm">Payment Instructions</p>
-                <p className="text-yellow-600 text-sm mt-1">
+                <p style={{ color: '#92400e', fontWeight: '600', fontSize: '0.875rem' }}>Payment Instructions</p>
+                <p style={{ color: '#92400e', fontSize: '0.875rem', marginTop: '4px' }}>
                   Send payment to:
                 </p>
-                <div className="mt-3 p-3 bg-white rounded-xl text-center border-2 border-yellow-200">
-                  <Phone className="w-5 h-5 text-yellow-600 inline-block mr-2" />
-                  <span className="text-xl font-mono font-bold text-yellow-700 tracking-wider">
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  background: 'white',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  border: '2px solid #fde68a'
+                }}>
+                  <Phone className="w-5 h-5 text-yellow-600" style={{ display: 'inline-block', marginRight: '8px' }} />
+                  <span style={{ fontSize: '1.25rem', fontFamily: 'monospace', fontWeight: 'bold', color: '#92400e', letterSpacing: '1px' }}>
                     09XXXXXXXX
                   </span>
                 </div>
-                <p className="text-yellow-600 text-xs mt-3 flex items-center gap-1">
+                <p style={{ color: '#92400e', fontSize: '0.75rem', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <AlertCircle className="w-3 h-3" />
                   Use the <strong>SAME phone number</strong> you entered
                 </p>
               </div>
             </div>
           </div>
-
-          {/* Confirm Button - Purple Gradient */}
-          <button
-            onClick={handlePaid}
-            className="btn-primary-clean mt-2"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Processing...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-5 h-5" />
-                I Have Paid
-              </>
-            )}
-          </button>
-
-          <p className="text-center text-purple-400 text-xs font-medium">
-            Your application will be verified manually
-          </p>
         </div>
+
+        {/* Confirm Button */}
+        <button
+          onClick={handlePaid}
+          style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+            color: 'white',
+            padding: '16px 28px',
+            borderRadius: '16px',
+            fontWeight: '700',
+            fontSize: '1rem',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            width: '100%',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            boxShadow: '0 8px 24px rgba(245, 158, 11, 0.3)',
+            opacity: loading ? 0.6 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer'
+          }}
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <span style={{
+                width: '20px',
+                height: '20px',
+                border: '2px solid rgba(255,255,255,0.3)',
+                borderTopColor: 'white',
+                borderRadius: '50%',
+                display: 'inline-block',
+                animation: 'spin 0.8s linear infinite'
+              }}></span>
+              Processing...
+            </>
+          ) : (
+            <>
+              <Send className="w-5 h-5" />
+              I Have Paid
+            </>
+          )}
+        </button>
+
+        <p style={{ textAlign: 'center', color: '#d97706', fontSize: '0.75rem', marginTop: '12px', fontWeight: '500' }}>
+          Your application will be verified manually
+        </p>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
