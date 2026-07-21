@@ -122,7 +122,7 @@ const Home = () => {
                   <Gift className="w-5 h-5 text-purple-600" />
                   <span className="text-gray-700 font-medium">Grand Prize</span>
                 </div>
-                <span className="text-purple-700 font-bold">$10,000</span>
+                <span className="text-purple-700 font-bold">Over 1 million ETB worth prizes</span>
               </div>
             </div>
 
