@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Sparkles, Ticket, Gift, Users, Clock, Crown, Star, Zap } from 'lucide-react';
+import { Ticket, Users, Clock, Sparkles, Gift, ChevronRight, Crown } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -28,8 +28,8 @@ const Home = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="spinner-premium relative mx-auto"></div>
-          <p className="mt-6 text-white/60 font-light text-lg">Loading the lottery...</p>
+          <div className="spinner-clean mx-auto"></div>
+          <p className="mt-4 text-purple-600 font-medium">Loading...</p>
         </div>
       </div>
     );
@@ -38,9 +38,9 @@ const Home = () => {
   if (!lottery) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="glass-card p-8 max-w-md w-full text-center">
-          <p className="text-red-400">Failed to load lottery</p>
-          <button onClick={fetchStatus} className="btn-premium mt-4">
+        <div className="card-clean max-w-md w-full text-center">
+          <p className="text-red-500">Failed to load lottery</p>
+          <button onClick={fetchStatus} className="btn-primary-clean mt-4">
             Retry
           </button>
         </div>
@@ -53,116 +53,92 @@ const Home = () => {
   const progress = (lottery.ticketsSold / lottery.maxTickets) * 100;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative">
-      {/* Animated particles */}
-      <div className="bg-particles">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="particle"
-            style={{
-              width: Math.random() * 6 + 2 + 'px',
-              height: Math.random() * 6 + 2 + 'px',
-              left: Math.random() * 100 + '%',
-              animationDuration: Math.random() * 20 + 15 + 's',
-              animationDelay: Math.random() * 10 + 's',
-              background: `rgba(99, 102, 241, ${Math.random() * 0.2 + 0.05})`
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="glass-card w-full max-w-md p-8 relative z-10 hover-lift">
-        {/* Glow effect */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
-        
-        <div className="relative z-10">
-          {/* Header with crown */}
-          <div className="text-center">
-            <div className="inline-block p-5 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl float-animation border border-white/10">
-              <Crown className="w-14 h-14 text-yellow-400" />
-            </div>
-            <h1 className="section-title gradient-text mt-4">Lottery</h1>
-            <p className="text-white/60 text-lg font-light">Win amazing prizes!</p>
+    <div className="container-mobile">
+      <div className="card-clean">
+        {/* Header with Purple */}
+        <div className="text-center">
+          <div className="icon-wrapper-purple mx-auto mb-3">
+            <Crown className="w-8 h-8" />
           </div>
-
-          {isShutdown ? (
-            <div className="mt-8 bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center backdrop-blur-sm">
-              <div className="text-6xl mb-3">🔴</div>
-              <p className="text-red-400 font-bold text-2xl">LOTTERY IS OVER</p>
-              <p className="text-red-400/60 text-sm mt-2">No more entries accepted</p>
-            </div>
-          ) : isSoldOut ? (
-            <div className="mt-8 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-6 text-center backdrop-blur-sm">
-              <div className="text-6xl mb-3">🎟️</div>
-              <p className="text-yellow-400 font-bold text-2xl">SOLD OUT</p>
-              <p className="text-yellow-400/60 text-sm mt-2">All tickets have been sold</p>
-            </div>
-          ) : (
-            <>
-              <div className="mt-8 space-y-6">
-                {/* Progress section */}
-                <div>
-                  <div className="flex justify-between text-white/70 text-sm font-medium mb-2">
-                    <span className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      Tickets Sold
-                    </span>
-                    <span className="text-white font-bold">
-                      {lottery.ticketsSold} / {lottery.maxTickets}
-                    </span>
-                  </div>
-                  <div className="progress-premium">
-                    <div 
-                      className="progress-fill-premium"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Stats row */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
-                    <p className="text-white/40 text-xs uppercase tracking-wider font-semibold">Remaining</p>
-                    <p className="stat-number-gold mt-1">{lottery.remaining}</p>
-                  </div>
-                  <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
-                    <p className="text-white/40 text-xs uppercase tracking-wider font-semibold">Status</p>
-                    <div className="mt-1">
-                      <span className={`badge ${isSoldOut ? 'badge-sold-out' : 'badge-open'}`}>
-                        {isSoldOut ? 'Sold Out' : 'Open'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Prize info */}
-                <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 rounded-2xl p-4 border border-yellow-500/10 text-center">
-                  <Star className="w-5 h-5 text-yellow-400 inline-block mr-2" />
-                  <span className="text-white/80 font-medium">Grand Prize: $10,000</span>
-                </div>
-
-                {/* Buy button */}
-                <Link to="/buy" className="btn-premium block text-center group relative overflow-hidden">
-                  <span className="relative z-10 flex items-center justify-center gap-3">
-                    <Ticket className="w-5 h-5" />
-                    Buy Ticket
-                    <Sparkles className="w-4 h-4" />
-                  </span>
-                </Link>
-
-                {/* Footer links */}
-                <div className="flex gap-4 mt-2">
-                  <Link to="/status" className="btn-secondary-premium text-center text-sm">
-                    <Zap className="w-4 h-4 inline-block mr-2" />
-                    Check Status
-                  </Link>
-                </div>
-              </div>
-            </>
-          )}
+          <h1 className="text-3xl font-bold text-gray-900">
+            <span className="gradient-text">Lottery</span>
+          </h1>
+          <p className="text-purple-500 text-sm mt-1 font-medium">Win amazing prizes!</p>
         </div>
+
+        {isShutdown ? (
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center mt-6">
+            <div className="text-4xl mb-2">🔴</div>
+            <p className="text-red-600 font-bold text-lg">LOTTERY IS OVER</p>
+            <p className="text-red-500 text-sm mt-1">No more entries accepted</p>
+          </div>
+        ) : isSoldOut ? (
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6 text-center mt-6">
+            <div className="text-4xl mb-2">🎟️</div>
+            <p className="text-yellow-600 font-bold text-lg">SOLD OUT</p>
+            <p className="text-yellow-500 text-sm mt-1">All tickets have been sold</p>
+          </div>
+        ) : (
+          <>
+            {/* Progress with Purple */}
+            <div className="mt-6">
+              <div className="flex justify-between text-sm font-medium text-gray-600 mb-2">
+                <span className="flex items-center gap-2 text-purple-700">
+                  <Users className="w-4 h-4" />
+                  Tickets Sold
+                </span>
+                <span className="font-bold text-purple-700">
+                  {lottery.ticketsSold} / {lottery.maxTickets}
+                </span>
+              </div>
+              <div className="progress-clean">
+                <div 
+                  className="progress-fill-clean"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Stats Grid with Purple */}
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              <div className="stat-box">
+                <p className="stat-number-clean">{lottery.remaining}</p>
+                <p className="stat-label-clean">Remaining</p>
+              </div>
+              <div className="stat-box">
+                <p className="text-sm font-semibold text-purple-700 mb-1">Status</p>
+                <span className={`badge-clean ${isSoldOut ? 'badge-sold-clean' : 'badge-open-clean'}`}>
+                  {isSoldOut ? 'Sold Out' : 'Open'}
+                </span>
+              </div>
+            </div>
+
+            {/* Prize Info with Purple */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 mt-4 border border-purple-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Gift className="w-5 h-5 text-purple-600" />
+                  <span className="text-gray-700 font-medium">Grand Prize</span>
+                </div>
+                <span className="text-purple-700 font-bold">$10,000</span>
+              </div>
+            </div>
+
+            {/* Buy Button - Purple */}
+            <Link to="/buy" className="btn-primary-clean mt-6">
+              <Ticket className="w-5 h-5" />
+              Buy Ticket
+              <Sparkles className="w-4 h-4" />
+            </Link>
+
+            {/* Status Check - Purple */}
+            <Link to="/status" className="btn-secondary-clean mt-3">
+              <Clock className="w-4 h-4" />
+              Check Application Status
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );
