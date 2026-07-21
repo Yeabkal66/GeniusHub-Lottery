@@ -84,7 +84,7 @@ const Pending = () => {
             gap: '8px'
           }}>
             <Phone className="w-5 h-5" />
-            09XXXXXXXX
+            Your Number
           </p>
           <div style={{
             marginTop: '12px',
