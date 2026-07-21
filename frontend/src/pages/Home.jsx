@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Sparkles, Ticket, Gift, Users, Clock } from 'lucide-react';
+import { Sparkles, Ticket, Gift, Users, Clock, Crown, Star, Zap } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -28,8 +28,8 @@ const Home = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-20 h-20 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading Lottery...</p>
+          <div className="spinner-premium relative mx-auto"></div>
+          <p className="mt-6 text-white/60 font-light text-lg">Loading the lottery...</p>
         </div>
       </div>
     );
@@ -38,9 +38,9 @@ const Home = () => {
   if (!lottery) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="card w-full max-w-md text-center">
-          <p className="text-red-600">Failed to load lottery</p>
-          <button onClick={fetchStatus} className="mt-4 btn-primary">
+        <div className="glass-card p-8 max-w-md w-full text-center">
+          <p className="text-red-400">Failed to load lottery</p>
+          <button onClick={fetchStatus} className="btn-premium mt-4">
             Retry
           </button>
         </div>
@@ -53,82 +53,113 @@ const Home = () => {
   const progress = (lottery.ticketsSold / lottery.maxTickets) * 100;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="card w-full max-w-md relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-200/30 rounded-full blur-3xl"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+      {/* Animated particles */}
+      <div className="bg-particles">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="particle"
+            style={{
+              width: Math.random() * 6 + 2 + 'px',
+              height: Math.random() * 6 + 2 + 'px',
+              left: Math.random() * 100 + '%',
+              animationDuration: Math.random() * 20 + 15 + 's',
+              animationDelay: Math.random() * 10 + 's',
+              background: `rgba(99, 102, 241, ${Math.random() * 0.2 + 0.05})`
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="glass-card w-full max-w-md p-8 relative z-10 hover-lift">
+        {/* Glow effect */}
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
         
         <div className="relative z-10">
-          <div className="text-center floating">
-            <div className="inline-block p-4 gradient-bg rounded-full shadow-lg">
-              <Ticket className="w-12 h-12 text-white" />
+          {/* Header with crown */}
+          <div className="text-center">
+            <div className="inline-block p-5 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl float-animation border border-white/10">
+              <Crown className="w-14 h-14 text-yellow-400" />
             </div>
+            <h1 className="section-title gradient-text mt-4">Lottery</h1>
+            <p className="text-white/60 text-lg font-light">Win amazing prizes!</p>
           </div>
 
-          <h1 className="section-title text-center mt-4">Lottery Draw</h1>
-          <p className="text-center text-gray-600 mt-2">Win amazing prizes!</p>
-
           {isShutdown ? (
-            <div className="mt-6 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-xl p-6 text-center">
-              <div className="text-5xl mb-3">🔴</div>
-              <p className="text-red-600 font-bold text-xl">LOTTERY IS OVER</p>
-              <p className="text-red-500 text-sm mt-2">No more entries accepted</p>
+            <div className="mt-8 bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center backdrop-blur-sm">
+              <div className="text-6xl mb-3">🔴</div>
+              <p className="text-red-400 font-bold text-2xl">LOTTERY IS OVER</p>
+              <p className="text-red-400/60 text-sm mt-2">No more entries accepted</p>
             </div>
           ) : isSoldOut ? (
-            <div className="mt-6 bg-yellow-50/80 backdrop-blur-sm border border-yellow-200 rounded-xl p-6 text-center">
-              <div className="text-5xl mb-3">🎟️</div>
-              <p className="text-yellow-600 font-bold text-xl">SOLD OUT</p>
-              <p className="text-yellow-500 text-sm mt-2">All tickets have been sold</p>
+            <div className="mt-8 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-6 text-center backdrop-blur-sm">
+              <div className="text-6xl mb-3">🎟️</div>
+              <p className="text-yellow-400 font-bold text-2xl">SOLD OUT</p>
+              <p className="text-yellow-400/60 text-sm mt-2">All tickets have been sold</p>
             </div>
           ) : (
             <>
-              <div className="mt-6 space-y-4">
-                <div className="flex justify-between text-gray-600 font-medium">
-                  <span className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    Tickets Sold
-                  </span>
-                  <span className="font-bold text-indigo-600">
-                    {lottery.ticketsSold} / {lottery.maxTickets}
-                  </span>
-                </div>
-                
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-gray-500">Remaining</p>
-                    <p className="text-3xl font-bold text-indigo-600">
-                      {lottery.remaining}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500">Status</p>
-                    <span className={`status-badge ${isSoldOut ? 'status-sold-out' : 'status-open'}`}>
-                      {isSoldOut ? 'Sold Out' : 'Open'}
+              <div className="mt-8 space-y-6">
+                {/* Progress section */}
+                <div>
+                  <div className="flex justify-between text-white/70 text-sm font-medium mb-2">
+                    <span className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Tickets Sold
+                    </span>
+                    <span className="text-white font-bold">
+                      {lottery.ticketsSold} / {lottery.maxTickets}
                     </span>
                   </div>
+                  <div className="progress-premium">
+                    <div 
+                      className="progress-fill-premium"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
-                  <Clock className="w-4 h-4" />
-                  <span>Get your ticket now!</span>
+                {/* Stats row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
+                    <p className="text-white/40 text-xs uppercase tracking-wider font-semibold">Remaining</p>
+                    <p className="stat-number-gold mt-1">{lottery.remaining}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
+                    <p className="text-white/40 text-xs uppercase tracking-wider font-semibold">Status</p>
+                    <div className="mt-1">
+                      <span className={`badge ${isSoldOut ? 'badge-sold-out' : 'badge-open'}`}>
+                        {isSoldOut ? 'Sold Out' : 'Open'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Prize info */}
+                <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 rounded-2xl p-4 border border-yellow-500/10 text-center">
+                  <Star className="w-5 h-5 text-yellow-400 inline-block mr-2" />
+                  <span className="text-white/80 font-medium">Grand Prize: $10,000</span>
+                </div>
+
+                {/* Buy button */}
+                <Link to="/buy" className="btn-premium block text-center group relative overflow-hidden">
+                  <span className="relative z-10 flex items-center justify-center gap-3">
+                    <Ticket className="w-5 h-5" />
+                    Buy Ticket
+                    <Sparkles className="w-4 h-4" />
+                  </span>
+                </Link>
+
+                {/* Footer links */}
+                <div className="flex gap-4 mt-2">
+                  <Link to="/status" className="btn-secondary-premium text-center text-sm">
+                    <Zap className="w-4 h-4 inline-block mr-2" />
+                    Check Status
+                  </Link>
                 </div>
               </div>
-
-              <Link to="/buy" className="btn-primary mt-6 block text-center group">
-                <span className="flex items-center justify-center gap-2">
-                  <Sparkles className="w-5 h-5" />
-                  Buy Ticket
-                  <Gift className="w-5 h-5" />
-                </span>
-              </Link>
             </>
           )}
         </div>
