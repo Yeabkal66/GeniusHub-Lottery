@@ -131,7 +131,7 @@ const Payment = () => {
                 <DollarSign className="w-5 h-5" />
                 Ticket Price
               </span>
-              <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#7c3aed' }}>$100</span>
+              <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#7c3aed' }}>2000 ETB</span>
             </div>
           </div>
 
