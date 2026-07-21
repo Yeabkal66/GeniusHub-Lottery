@@ -15,9 +15,9 @@ const Layout = ({ children }) => {
 
   // Social Media Links - Add your URLs here
   const socialLinks = {
-    instagram: 'https://instagram.com/your_username',
-    telegram: 'https://t.me/your_username',
-    tiktok: 'https://tiktok.com/@your_username'
+    instagram: 'https://www.instagram.com/geniushub_eth?igsh=ejZ6cjFzMGg4d3hq',
+    telegram: 'https://t.me/GeniusHub_Et',
+    tiktok: 'https://www.tiktok.com/@sen_uu21?_r=1&_t=ZS-98EG9GI2AZM'
   };
 
   return (
