@@ -5,66 +5,67 @@ const Lottery = require('./models/Lottery');
 let bot;
 let pendingActions = {};
 
+// Helper to get next ticket number
+const getNextTicketNumber = () => {
+  const count = Math.floor(Math.random() * 1000);
+  return 'A-' + String(count).padStart(3, '0');
+};
+
+// Helper to update sold count
+const updateSoldCount = async () => {
+  const lottery = await Lottery.findOne();
+  if (lottery) {
+    lottery.ticketsSold += 1;
+    await lottery.save();
+  }
+};
+
+// Helper to get next order number
+const getNextOrder = async () => {
+  const lottery = await Lottery.findOne();
+  if (!lottery) {
+    const newLottery = new Lottery();
+    await newLottery.save();
+    return 1;
+  }
+  return lottery.ticketsSold + 1;
+};
+
+// Check if lottery is shutdown
+const isShutdown = async () => {
+  const lottery = await Lottery.findOne();
+  return lottery ? lottery.isShutdown : false;
+};
+
+// Check if sold out
+const isSoldOut = async () => {
+  const lottery = await Lottery.findOne();
+  if (!lottery) return false;
+  return lottery.ticketsSold >= lottery.maxTickets;
+};
+
+// Send notification to admin about new application
+const notifyAdmin = async (application) => {
+  try {
+    const order = await getNextOrder();
+    const lottery = await Lottery.findOne();
+    const maxTickets = lottery ? lottery.maxTickets : 10;
+    
+    await bot.telegram.sendMessage(
+      process.env.ADMIN_ID,
+      'New Application\n\n' +
+      'Name: ' + application.firstName + ' ' + application.lastName + '\n' +
+      'Phone: ' + application.phoneNumber + '\n' +
+      'Order: ' + order + '/' + maxTickets + '\n\n' +
+      'Use /approve or /reject commands.'
+    );
+  } catch (error) {
+    console.error('Error notifying admin:', error);
+  }
+};
+
 const setupBot = () => {
   bot = new Telegraf(process.env.BOT_TOKEN);
-
-  // Helper to get next ticket number
-  const getNextTicketNumber = () => {
-    const count = Math.floor(Math.random() * 1000);
-    return 'A-' + String(count).padStart(3, '0');
-  };
-
-  // Helper to update sold count
-  const updateSoldCount = async () => {
-    const lottery = await Lottery.findOne();
-    if (lottery) {
-      lottery.ticketsSold += 1;
-      await lottery.save();
-    }
-  };
-
-  // Helper to get next order number
-  const getNextOrder = async () => {
-    const lottery = await Lottery.findOne();
-    if (!lottery) {
-      const newLottery = new Lottery();
-      await newLottery.save();
-      return 1;
-    }
-    return lottery.ticketsSold + 1;
-  };
-
-  // Check if lottery is shutdown
-  const isShutdown = async () => {
-    const lottery = await Lottery.findOne();
-    return lottery ? lottery.isShutdown : false;
-  };
-
-  // Check if sold out
-  const isSoldOut = async () => {
-    const lottery = await Lottery.findOne();
-    if (!lottery) return false;
-    return lottery.ticketsSold >= lottery.maxTickets;
-  };
-
-  // Send notification to admin about new application
-  const notifyAdmin = async (application) => {
-    try {
-      const order = await getNextOrder();
-      const maxTickets = (await Lottery.findOne())?.maxTickets || 10;
-      
-      await bot.telegram.sendMessage(
-        process.env.ADMIN_ID,
-        'New Application\n\n' +
-        'Name: ' + application.firstName + ' ' + application.lastName + '\n' +
-        'Phone: ' + application.phoneNumber + '\n' +
-        'Order: ' + order + '/' + maxTickets + '\n\n' +
-        'Use /approve or /reject commands.'
-      );
-    } catch (error) {
-      console.error('Error notifying admin:', error);
-    }
-  };
 
   // Handle /start command
   bot.command('start', async (ctx) => {
