@@ -4,6 +4,7 @@ const Lottery = require('./models/Lottery');
 
 let bot;
 let pendingActions = {};
+let resetRequests = {};
 
 // Helper functions
 const updateSoldCount = async () => {
@@ -35,7 +36,7 @@ const isSoldOut = async () => {
   return lottery.ticketsSold >= lottery.maxTickets;
 };
 
-// ✅ NOTIFY ADMIN FUNCTION - Called when user clicks "I Have Paid"
+// Notify admin function
 const notifyAdmin = async (application) => {
   try {
     if (!bot) {
@@ -72,7 +73,7 @@ const setupBot = () => {
   // /start command
   bot.command('start', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
-      await ctx.reply('Unauthorized');
+      await ctx.reply('⛔ Unauthorized');
       return;
     }
     
@@ -89,7 +90,9 @@ const setupBot = () => {
       '/status - Check lottery status\n' +
       '/approve - Approve an application\n' +
       '/reject - Reject an application\n' +
+      '/reset - Reset lottery (ask for quantity)\n' +
       '/shutdown - Shutdown the lottery\n' +
+      '/cancel - Cancel current operation\n' +
       '/start - Show this menu',
       { parse_mode: 'Markdown' }
     );
@@ -98,13 +101,13 @@ const setupBot = () => {
   // /status command
   bot.command('status', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
-      await ctx.reply('Unauthorized');
+      await ctx.reply('⛔ Unauthorized');
       return;
     }
 
     const lottery = await Lottery.findOne();
     if (!lottery) {
-      await ctx.reply('No lottery found');
+      await ctx.reply('❌ No lottery found');
       return;
     }
 
@@ -116,25 +119,83 @@ const setupBot = () => {
       'Sold: ' + lottery.ticketsSold + '\n' +
       'Remaining: ' + (lottery.maxTickets - lottery.ticketsSold) + '\n' +
       'Pending Applications: ' + pending + '\n' +
-      'Status: ' + (lottery.isShutdown ? 'SHUTDOWN' : 'Active'),
+      'Status: ' + (lottery.isShutdown ? '🔴 SHUTDOWN' : '🟢 Active'),
       { parse_mode: 'Markdown' }
     );
+  });
+
+  // /reset command
+  bot.command('reset', async (ctx) => {
+    if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
+      await ctx.reply('⛔ Unauthorized');
+      return;
+    }
+
+    if (resetRequests[ctx.from.id]) {
+      await ctx.reply('⚠️ You already have a pending reset request. Use /cancel to cancel it.');
+      return;
+    }
+
+    resetRequests[ctx.from.id] = { 
+      action: 'reset', 
+      step: 'ask_quantity' 
+    };
+
+    await ctx.reply(
+      '⚠️ *Reset Lottery*\n\n' +
+      'This will:\n' +
+      '• Delete all existing applications\n' +
+      '• Reset ticket count to 0\n' +
+      '• Create a new lottery\n\n' +
+      'Please enter the number of tickets you want (e.g., 100):\n\n' +
+      'Type /cancel to cancel this operation.',
+      { parse_mode: 'Markdown' }
+    );
+  });
+
+  // /shutdown command
+  bot.command('shutdown', async (ctx) => {
+    if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
+      await ctx.reply('⛔ Unauthorized');
+      return;
+    }
+
+    const lottery = await Lottery.findOne();
+    if (lottery) {
+      lottery.isShutdown = true;
+      await lottery.save();
+      await ctx.reply('🔴 Lottery has been shutdown. No more applications will be accepted.');
+    } else {
+      await ctx.reply('❌ No lottery found');
+    }
+  });
+
+  // /cancel command
+  bot.command('cancel', async (ctx) => {
+    if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
+      await ctx.reply('⛔ Unauthorized');
+      return;
+    }
+
+    delete pendingActions[ctx.from.id];
+    delete resetRequests[ctx.from.id];
+    await ctx.reply('✅ Cancelled');
   });
 
   // /approve command
   bot.command('approve', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
-      await ctx.reply('Unauthorized');
+      await ctx.reply('⛔ Unauthorized');
       return;
     }
 
     if (await isShutdown()) {
-      await ctx.reply('Lottery is shutdown');
+      await ctx.reply('🔴 Lottery is shutdown');
       return;
     }
 
     if (await isSoldOut()) {
-      await ctx.reply('All tickets are sold out!');
+      await ctx.reply('❌ All tickets are sold out!');
       return;
     }
 
@@ -142,7 +203,7 @@ const setupBot = () => {
       .sort({ createdAt: 1 });
 
     if (!application) {
-      await ctx.reply('No pending applications');
+      await ctx.reply('📭 No pending applications');
       return;
     }
 
@@ -163,7 +224,7 @@ const setupBot = () => {
   // /reject command
   bot.command('reject', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
-      await ctx.reply('Unauthorized');
+      await ctx.reply('⛔ Unauthorized');
       return;
     }
 
@@ -171,7 +232,7 @@ const setupBot = () => {
       .sort({ createdAt: 1 });
 
     if (!application) {
-      await ctx.reply('No pending applications');
+      await ctx.reply('📭 No pending applications');
       return;
     }
 
@@ -186,46 +247,87 @@ const setupBot = () => {
     );
   });
 
-  // /shutdown command
-  bot.command('shutdown', async (ctx) => {
-    if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
-      await ctx.reply('Unauthorized');
-      return;
-    }
-
-    const lottery = await Lottery.findOne();
-    if (lottery) {
-      lottery.isShutdown = true;
-      await lottery.save();
-      await ctx.reply('🔴 Lottery has been shutdown. No more applications will be accepted.');
-    } else {
-      await ctx.reply('No lottery found');
-    }
-  });
-
-  // /cancel command
-  bot.command('cancel', async (ctx) => {
-    if (ctx.from.id.toString() !== process.env.ADMIN_ID) {
-      await ctx.reply('Unauthorized');
-      return;
-    }
-
-    delete pendingActions[ctx.from.id];
-    await ctx.reply('Cancelled');
-  });
-
-  // Handle text messages (for ticket number input)
+  // Handle text messages
   bot.on('text', async (ctx) => {
     if (ctx.from.id.toString() !== process.env.ADMIN_ID) return;
     
+    const text = ctx.message.text.trim();
+
+    // ✅ Handle Reset Request
+    if (resetRequests[ctx.from.id]) {
+      const resetState = resetRequests[ctx.from.id];
+      
+      if (resetState.step === 'ask_quantity') {
+        const quantity = parseInt(text);
+        
+        if (isNaN(quantity) || quantity < 1) {
+          await ctx.reply('❌ Please enter a valid number greater than 0');
+          return;
+        }
+
+        resetRequests[ctx.from.id] = {
+          action: 'reset',
+          step: 'confirm',
+          quantity: quantity
+        };
+
+        await ctx.reply(
+          '⚠️ *Confirm Reset*\n\n' +
+          'You are about to reset the lottery with:\n' +
+          '• New Total Tickets: ' + quantity + '\n\n' +
+          'This will DELETE all applications.\n\n' +
+          'Type "YES" to confirm or /cancel to cancel.',
+          { parse_mode: 'Markdown' }
+        );
+        return;
+      }
+
+      if (resetState.step === 'confirm') {
+        if (text.toUpperCase() === 'YES') {
+          try {
+            const quantity = resetState.quantity;
+            
+            await Application.deleteMany({});
+            await Lottery.deleteMany({});
+            
+            const newLottery = new Lottery({
+              maxTickets: quantity,
+              ticketsSold: 0,
+              isActive: true,
+              isShutdown: false
+            });
+            await newLottery.save();
+
+            delete resetRequests[ctx.from.id];
+
+            await ctx.reply(
+              '✅ *Lottery Reset Successful!*\n\n' +
+              '• Total Tickets: ' + newLottery.maxTickets + '\n' +
+              '• Sold: 0\n' +
+              '• Remaining: ' + newLottery.maxTickets + '\n\n' +
+              'All applications have been cleared.\n' +
+              'The website will now show the new lottery.',
+              { parse_mode: 'Markdown' }
+            );
+          } catch (error) {
+            await ctx.reply('❌ Error resetting lottery: ' + error.message);
+            delete resetRequests[ctx.from.id];
+          }
+        } else {
+          await ctx.reply('❌ Reset cancelled');
+          delete resetRequests[ctx.from.id];
+        }
+        return;
+      }
+    }
+
+    // ✅ Handle Approve Action (existing)
     const pending = pendingActions[ctx.from.id];
     if (!pending) return;
 
-    const text = ctx.message.text.trim();
-
     if (text === '/cancel') {
       delete pendingActions[ctx.from.id];
-      await ctx.reply('Cancelled');
+      await ctx.reply('✅ Cancelled');
       return;
     }
 
@@ -233,19 +335,19 @@ const setupBot = () => {
       const ticketNumber = text.toUpperCase();
       
       if (!/^[A-Z0-9\-]{3,10}$/.test(ticketNumber)) {
-        await ctx.reply('Invalid format. Use format like A-001');
+        await ctx.reply('❌ Invalid format. Use format like A-001');
         return;
       }
 
       const existing = await Application.findOne({ ticketNumber });
       if (existing) {
-        await ctx.reply('Ticket number already taken. Please use another.');
+        await ctx.reply('❌ Ticket number already taken. Please use another.');
         return;
       }
 
       const application = await Application.findById(pending.applicationId);
       if (!application) {
-        await ctx.reply('Application not found');
+        await ctx.reply('❌ Application not found');
         delete pendingActions[ctx.from.id];
         return;
       }
@@ -284,5 +386,4 @@ const setupBot = () => {
   return bot;
 };
 
-// ✅ EXPORT both functions
 module.exports = { setupBot, notifyAdmin };
