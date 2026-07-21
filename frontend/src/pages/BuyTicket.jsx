@@ -94,7 +94,7 @@ const BuyTicket = () => {
   }
 
   return (
-    <div className="container-mobile">
+    <div className="container-mobile" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <button
         onClick={() => navigate('/')}
         className="flex items-center gap-2 text-purple-500 hover:text-purple-700 transition-colors mb-4 font-medium"
